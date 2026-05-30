@@ -1,0 +1,439 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// OT SERVER CORE TABLES
+// ============================================
+
+model Account {
+  id        Int       @id @default(autoincrement()) @map("id")
+  name      String    @unique @db.VarChar(32) @map("name")
+  email     String    @db.VarChar(255) @map("email")
+  password  String    @db.VarChar(255) @map("password")
+  salt      String?   @db.VarChar(40) @map("salt")
+  type      Int       @default(1) @map("type") // 1=normal, 2=tutor, 3=senior tutor, 4=gamemaster, 5=community manager, 6=god
+  premDays  Int       @default(0) @map("premend")
+  lastDay   Int       @default(0) @map("lastday")
+  createdAt DateTime  @default(now()) @map("created")
+  coins     Int       @default(0) @map("coins")
+
+  players  Player[]
+  guilds   Guild[]
+
+  @@map("accounts")
+}
+
+model Player {
+  id         Int       @id @default(autoincrement()) @map("id")
+  name       String    @unique @db.VarChar(75) @map("name")
+  accountId  Int       @map("account_id")
+  level      Int       @default(1) @map("level")
+  group_id   Int       @default(1) @map("group_id")
+  vocation   Int       @default(0) @map("vocation")
+  health     Int       @default(150) @map("health")
+  healthmax  Int       @default(150) @map("healthmax")
+  experience Int       @default(0) @map("experience")
+  lookbody   Int       @default(0) @map("lookbody")
+  lookfeet   Int       @default(0) @map("lookfeet")
+  lookhead   Int       @default(0) @map("lookhead")
+  looklegs   Int       @default(0) @map("looklegs")
+  looktype   Int       @default(128) @map("looktype")
+  lookaddons Int       @default(0) @map("lookaddons")
+  lookmount  Int       @default(0) @map("lookmount")
+  maglevel   Int       @default(0) @map("maglevel")
+  mana       Int       @default(0) @map("mana")
+  manamax    Int       @default(0) @map("manamax")
+  soul       Int       @default(0) @map("soul")
+  town_id    Int       @default(1) @map("town_id")
+  posx       Int       @default(0) @map("posx")
+  posy       Int       @default(0) @map("posy")
+  posz       Int       @default(0) @map("posz")
+  cap        Int       @default(400) @map("cap")
+  sex        Int       @default(0) @map("sex") // 0=male, 1=female
+  lastlogin  Int       @default(0) @map("lastlogin")
+  lastip     String    @default("") @db.VarChar(16) @map("lastip")
+  save       Boolean   @default(true) @map("save")
+  skull      Int       @default(0) @map("skull")
+  skulltime  Int       @default(0) @map("skulltime")
+  creation   DateTime  @default(now()) @map("created")
+  comment    String    @default("") @db.VarChar(255) @map("comment")
+  hidden     Boolean   @default(false) @map("hidden")
+  online     Boolean   @default(false) @map("online")
+  deletion   Int       @default(-1) @map("deletion")
+  balance    Int       @default(0) @map("balance")
+  offlinetraining_time Int @default(43200) @map("offlinetraining_time")
+  offlinetraining_skill Int @default(-1) @map("offlinetraining_skill")
+
+  account     Account     @relation(fields: [accountId], references: [id])
+  guildMember GuildMember?
+  skills      PlayerSkill[]
+  deaths      PlayerDeath[]
+  killers     PlayerKiller[]
+
+  @@index([accountId])
+  @@index([vocation])
+  @@index([level])
+  @@index([name])
+  @@map("players")
+}
+
+model PlayerSkill {
+  player_id Int @map("player_id")
+  skillid   Int @map("skillid")
+  value     Int @default(0) @map("value")
+  count     Int @default(0) @map("count")
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@id([player_id, skillid])
+  @@map("player_skills")
+}
+
+model PlayerDeath {
+  id        Int      @id @default(autoincrement()) @map("id")
+  player_id Int      @map("player_id")
+  date      DateTime @default(now()) @map("date")
+  level     Int      @default(1) @map("level")
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@index([player_id])
+  @@map("player_deaths")
+}
+
+model PlayerKiller {
+  player_id        Int @map("player_id")
+  kill_id          Int @map("kill_id")
+  final_hit        Boolean @default(false) @map("final_hit")
+  unjustified      Boolean @default(false) @map("unjustified")
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+
+  @@id([player_id, kill_id])
+  @@map("player_killers")
+}
+
+model Guild {
+  id          Int      @id @default(autoincrement()) @map("id")
+  name        String   @unique @db.VarChar(255) @map("name")
+  ownerid     Int      @map("ownerid")
+  creationdata DateTime @default(now()) @map("creationdata")
+  motd        String   @default("") @db.VarChar(255) @map("motd")
+  description String   @default("") @db.Text @map("description")
+  logo_gfx_name String @default("default") @db.VarChar(100) @map("logo_gfx_name")
+
+  account Account @relation(fields: [ownerid], references: [id])
+  members GuildMember[]
+  ranks   GuildRank[]
+
+  @@map("guilds")
+}
+
+model GuildRank {
+  id      Int    @id @default(autoincrement()) @map("id")
+  guild_id Int   @map("guild_id")
+  name    String @db.VarChar(255) @map("name")
+  level   Int    @default(0) @map("level") // 1=leader, 2=vice, 3=member
+
+  guild Guild @relation(fields: [guild_id], references: [id], onDelete: Cascade)
+  members GuildMember[]
+
+  @@index([guild_id])
+  @@map("guild_ranks")
+}
+
+model GuildMember {
+  id        Int    @id @default(autoincrement()) @map("id")
+  player_id Int @unique @map("player_id")
+  guild_id  Int @map("guild_id")
+  rank_id   Int @map("rank_id")
+  nick      String @default("") @db.VarChar(30) @map("nick")
+
+  player Player @relation(fields: [player_id], references: [id], onDelete: Cascade)
+  guild  Guild  @relation(fields: [guild_id], references: [id], onDelete: Cascade)
+  rank   GuildRank @relation(fields: [rank_id], references: [id])
+
+  @@index([guild_id])
+  @@map("guild_membership")
+}
+
+model House {
+  id       Int    @id @default(autoincrement()) @map("id")
+  name     String @db.VarChar(128) @map("name")
+  owner    Int    @default(0) @map("owner")
+  paid     Int    @default(0) @map("paid")
+  warnDate DateTime? @map("warnings")
+  town_id  Int    @default(0) @map("town_id")
+  rent     Int    @default(0) @map("rent")
+  size     Int    @default(0) @map("size")
+  beds     Int    @default(0) @map("beds")
+
+  @@index([owner])
+  @@map("houses")
+}
+
+model Ban {
+  id      Int    @id @default(autoincrement()) @map("id")
+  type    Int    @default(0) @map("type") // 1=ip, 2=player, 3=account, 4=namelock, 5=notation
+  value   String @default("") @db.VarChar(255) @map("value")
+  param   Int    @default(0) @map("param")
+  active  Boolean @default(true) @map("active")
+  expires Int    @default(0) @map("expires")
+  added   Int    @default(0) @map("added")
+  admin_id Int   @default(0) @map("admin_id")
+  comment String @default("") @db.VarChar(255) @map("comment")
+  reason  String @default("") @db.VarChar(255) @map("reason")
+  action  Int    @default(0) @map("action")
+  by      String @default("") @db.VarChar(50) @map("by")
+
+  @@map("bans")
+}
+
+model ServerConfig {
+  config String @id @db.VarChar(50) @map("config")
+  value  String @db.VarChar(255) @map("value")
+
+  @@map("server_config")
+}
+
+model ServerRecord {
+  record Int      @id @default(0) @map("record")
+  time   DateTime @default(now()) @map("timestamp")
+
+  @@map("server_record")
+}
+
+// ============================================
+// MYAAC WEB TABLES
+// ============================================
+
+model News {
+  id                Int    @id @default(autoincrement()) @map("id")
+  title             String @db.VarChar(100) @map("title")
+  body              String @db.Text @map("body")
+  type              Int    @default(1) @map("type") // 1=news, 2=ticker, 3=article
+  date              Int    @default(0) @map("date")
+  category          Int    @default(0) @map("category")
+  playerId          Int    @default(0) @map("player_id")
+  lastModifiedBy    Int    @default(0) @map("last_modified_by")
+  lastModifiedDate  Int    @default(0) @map("last_modified_date")
+  comments          String @default("") @db.VarChar(50) @map("comments")
+  articleText       String @default("") @db.VarChar(300) @map("article_text")
+  articleImage      String @default("") @db.VarChar(100) @map("article_image")
+  hidden            Boolean @default(false) @map("hidden")
+
+  @@index([type])
+  @@index([date])
+  @@map("myaac_news")
+}
+
+model NewsCategory {
+  id          Int    @id @default(autoincrement()) @map("id")
+  name        String @default("") @db.VarChar(50) @map("name")
+  description String @default("") @db.VarChar(50) @map("description")
+  iconId      Int    @default(0) @map("icon_id")
+  hidden      Boolean @default(false) @map("hidden")
+
+  @@map("myaac_news_categories")
+}
+
+model ForumBoard {
+  id          Int    @id @default(autoincrement()) @map("id")
+  name        String @db.VarChar(32) @map("name")
+  description String @default("") @db.VarChar(255) @map("description")
+  ordering    Int    @default(0) @map("ordering")
+  guildId     Int    @default(0) @map("guild")
+  access      Int    @default(0) @map("access")
+  closed      Boolean @default(false) @map("closed")
+  hidden      Boolean @default(false) @map("hidden")
+
+  threads ForumThread[]
+
+  @@map("myaac_forum_boards")
+}
+
+model ForumThread {
+  id           Int    @id @default(autoincrement()) @map("id")
+  firstPost    Int    @default(0) @map("first_post")
+  lastPost     Int    @default(0) @map("last_post")
+  section      Int    @default(0) @map("section")
+  replies      Int    @default(0) @map("replies")
+  views        Int    @default(0) @map("views")
+  authorAid    Int    @default(0) @map("author_aid")
+  authorGuid   Int    @default(0) @map("author_guid")
+  postText     String @db.Text @map("post_text")
+  postTopic    String @default("") @db.VarChar(255) @map("post_topic")
+  postSmile    Boolean @default(true) @map("post_smile")
+  postHtml     Boolean @default(false) @map("post_html")
+  postDate     Int    @default(0) @map("post_date")
+  lastEditAid  Int    @default(0) @map("last_edit_aid")
+  editDate     Int    @default(0) @map("edit_date")
+  postIp       String @default("0.0.0.0") @db.VarChar(32) @map("post_ip")
+  sticked      Boolean @default(false) @map("sticked")
+  closed       Boolean @default(false) @map("closed")
+
+  board ForumBoard? @relation(fields: [section], references: [id])
+
+  @@index([section])
+  @@map("myaac_forum")
+}
+
+model Faq {
+  id       Int    @id @default(autoincrement()) @map("id")
+  question String @default("") @db.VarChar(255) @map("question")
+  answer   String @default("") @db.VarChar(1020) @map("answer")
+  ordering Int    @default(0) @map("ordering")
+  hidden   Boolean @default(false) @map("hidden")
+
+  @@map("myaac_faq")
+}
+
+model Spell {
+  id           Int    @id @default(autoincrement()) @map("id")
+  spell        String @default("") @db.VarChar(255) @map("spell")
+  name         String @db.VarChar(255) @map("name")
+  words        String @default("") @db.VarChar(255) @map("words")
+  category     Int    @default(0) @map("category") // 1=attack, 2=healing, 3=summon, 4=supply, 5=support
+  type         Int    @default(0) @map("type") // 1=instant, 2=conjure, 3=rune
+  level        Int    @default(0) @map("level")
+  maglevel     Int    @default(0) @map("maglevel")
+  mana         Int    @default(0) @map("mana")
+  soul         Int    @default(0) @map("soul")
+  conjureId    Int    @default(0) @map("conjure_id")
+  conjureCount Int    @default(0) @map("conjure_count")
+  reagent      Int    @default(0) @map("reagent")
+  itemId       Int    @default(0) @map("item_id")
+  premium      Boolean @default(false) @map("premium")
+  vocations   String @default("") @db.VarChar(100) @map("vocations")
+  hidden       Boolean @default(false) @map("hidden")
+
+  @@unique([name])
+  @@map("myaac_spells")
+}
+
+model Monster {
+  id            Int    @id @default(autoincrement()) @map("id")
+  hidden        Boolean @default(false) @map("hidden")
+  name          String @db.VarChar(255) @map("name")
+  mana          Int    @default(0) @map("mana")
+  exp           Int    @default(0) @map("exp")
+  health        Int    @default(0) @map("health")
+  speedLvl      Int    @default(1) @map("speed_lvl")
+  useHaste      Boolean @default(false) @map("use_haste")
+  voices        String @default("") @db.Text @map("voices")
+  immunities    String @default("") @db.VarChar(255) @map("immunities")
+  elements      String @default("") @db.Text @map("elements")
+  summonable    Boolean @default(false) @map("summonable")
+  convinceable  Boolean @default(false) @map("convinceable")
+  pushable      Boolean @default(false) @map("pushable")
+  canpushitems  Boolean @default(false) @map("canpushitems")
+  canwalkonenergy Boolean @default(false) @map("canwalkonenergy")
+  canwalkonpoison Boolean @default(false) @map("canwalkonpoison")
+  canwalkonfire Boolean @default(false) @map("canwalkonfire")
+  runonhealth   Int    @default(0) @map("runonhealth")
+  hostile       Boolean @default(false) @map("hostile")
+  attackable    Boolean @default(false) @map("attackable")
+  rewardboss    Boolean @default(false) @map("rewardboss")
+  defense       Int    @default(0) @map("defense")
+  armor         Int    @default(0) @map("armor")
+  canpushcreatures Boolean @default(false) @map("canpushcreatures")
+  race          String @default("") @db.VarChar(255) @map("race")
+  loot          String @default("") @db.Text @map("loot")
+  summons       String @default("") @db.Text @map("summons")
+
+  @@map("myaac_monsters")
+}
+
+model Poll {
+  id       Int    @id @default(autoincrement()) @map("id")
+  question String @db.VarChar(255) @map("question")
+  description String @default("") @db.VarChar(255) @map("description")
+  endDate  Int    @default(0) @map("end")
+  startDate Int   @default(0) @map("start")
+  answers  Int    @default(0) @map("answers")
+  votesAll Int    @default(0) @map("votes_all")
+
+  pollAnswers PollAnswer[]
+
+  @@map("myaac_polls")
+}
+
+model PollAnswer {
+  pollId   Int    @map("poll_id")
+  answerId Int    @map("answer_id")
+  answer   String @db.VarChar(255) @map("answer")
+  votes    Int    @default(0) @map("votes")
+
+  poll Poll @relation(fields: [pollId], references: [id], onDelete: Cascade)
+
+  @@id([pollId, answerId])
+  @@map("myaac_polls_answers")
+}
+
+model Gallery {
+  id       Int    @id @default(autoincrement()) @map("id")
+  comment  String @default("") @db.VarChar(255) @map("comment")
+  image    String @default("") @db.VarChar(255) @map("image")
+  thumb    String @default("") @db.VarChar(255) @map("thumb")
+  author   String @default("") @db.VarChar(50) @map("author")
+  ordering Int    @default(0) @map("ordering")
+  hidden   Boolean @default(false) @map("hidden")
+
+  @@map("myaac_gallery")
+}
+
+model Changelog {
+  id       Int    @id @default(autoincrement()) @map("id")
+  body     String @default("") @db.VarChar(500) @map("body")
+  type     Int    @default(0) @map("type") // 1=added, 2=removed, 3=changed, 4=fixed
+  where    Int    @default(0) @map("where") // 1=server, 2=site
+  date     Int    @default(0) @map("date")
+  playerId Int    @default(0) @map("player_id")
+  hidden   Boolean @default(false) @map("hidden")
+
+  @@map("myaac_changelog")
+}
+
+model BugTracker {
+  id       Int    @id @default(autoincrement()) @map("uid")
+  account  String @default("") @db.VarChar(255) @map("account")
+  type     Int    @default(0) @map("type")
+  status   Int    @default(0) @map("status")
+  text     String @db.Text @map("text")
+  subject  String @default("") @db.VarChar(255) @map("subject")
+  reply    Int    @default(0) @map("reply")
+  who      Int    @default(0) @map("who")
+  tag      Int    @default(0) @map("tag")
+  date     DateTime @default(now()) @map("date")
+
+  @@map("myaac_bugtracker")
+}
+
+model Config {
+  id    Int    @id @default(autoincrement()) @map("id")
+  name  String @unique @db.VarChar(30) @map("name")
+  value String @db.VarChar(1000) @map("value")
+
+  @@map("myaac_config")
+}
+
+model Page {
+  id            Int    @id @default(autoincrement()) @map("id")
+  name          String @unique @db.VarChar(30) @map("name")
+  title         String @db.VarChar(30) @map("title")
+  body          String @db.Text @map("body")
+  date          Int    @default(0) @map("date")
+  playerId      Int    @default(0) @map("player_id")
+  php           Boolean @default(false) @map("php")
+  enableTinymce Boolean @default(true) @map("enable_tinymce")
+  access        Int    @default(0) @map("access")
+  hidden        Boolean @default(false) @map("hidden")
+
+  @@map("myaac_pages")
+}

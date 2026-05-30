@@ -1,16 +1,20 @@
 {
-  "name": "nextjs_tailwind_shadcn_ts",
-  "version": "0.2.0",
+  "name": "jo-server-ot",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "DATABASE_URL='postgresql://neondb_owner:npg_9cQHSJkv0aEN@ep-dawn-feather-aq3f3v2o-pooler.c-8.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require' next dev -p 3000 2>&1 | tee dev.log",
-    "build": "next build && cp -r .next/static .next/standalone/.next/ && cp -r public .next/standalone/",
-    "start": "NODE_ENV=production bun .next/standalone/server.js 2>&1 | tee server.log",
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
     "lint": "eslint .",
-    "db:push": "prisma db push",
+    "db:setup": "DATABASE_TYPE=$DATABASE_TYPE DATABASE_URL=$DATABASE_URL npx tsx prisma/setup-db.ts",
+    "db:setup:pg": "DATABASE_TYPE=postgresql npx tsx prisma/setup-db.ts",
+    "db:setup:mysql": "DATABASE_TYPE=mysql npx tsx prisma/setup-db.ts",
     "db:generate": "prisma generate",
+    "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:reset": "prisma migrate reset"
+    "db:reset": "prisma migrate reset",
+    "db:seed": "npx tsx prisma/seed.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -91,6 +95,7 @@
     "eslint-config-next": "^16.1.1",
     "tailwindcss": "^4",
     "tw-animate-css": "^1.3.5",
+    "tsx": "^4.19.0",
     "typescript": "^5"
   }
 }
