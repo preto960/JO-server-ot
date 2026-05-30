@@ -27,6 +27,7 @@ import {
 } from 'lucide-react'
 import { VOCATION_NAMES, SKILL_NAMES, GROUP_NAMES, type PageTab } from '@/lib/types'
 import { formatNumber } from '@/lib/vocations'
+import { TibiaLayout } from '@/components/layout/tibia-layout'
 
 // ====== TYPES ======
 interface AccountData {
@@ -124,7 +125,6 @@ const skillIcons: Record<number, React.ReactNode> = {
 // ====== MAIN COMPONENT ======
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState<PageTab>('home')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [account, setAccount] = useState<AccountData | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -855,102 +855,34 @@ export default function HomePage() {
     setPollVoting(false)
   }
 
-  // ====== NAVIGATION ITEMS ======
-  const mainNav: { key: PageTab; label: string; icon: React.ReactNode }[] = [
-    { key: 'home', label: 'Inicio', icon: <Home className="w-4 h-4" /> },
-    { key: 'highscores', label: 'Rankings', icon: <Trophy className="w-4 h-4" /> },
-    { key: 'online', label: 'Online', icon: <Eye className="w-4 h-4" /> },
-    { key: 'characters', label: 'Personajes', icon: <Users className="w-4 h-4" /> },
-    { key: 'guilds', label: 'Guilds', icon: <Crown className="w-4 h-4" /> },
-    { key: 'forum', label: 'Foro', icon: <MessageSquare className="w-4 h-4" /> },
-    { key: 'spells', label: 'Hechizos', icon: <Scroll className="w-4 h-4" /> },
-    { key: 'creatures', label: 'Criaturas', icon: <Skull className="w-4 h-4" /> },
-    { key: 'bans', label: 'Bans', icon: <Shield className="w-4 h-4" /> },
-    { key: 'bugs', label: 'Bug Tracker', icon: <Bug className="w-4 h-4" /> },
-    { key: 'changelog', label: 'Changelog', icon: <RefreshCw className="w-4 h-4" /> },
-    { key: 'gallery', label: 'Galería', icon: <Image className="w-4 h-4" /> },
-    { key: 'polls', label: 'Encuestas', icon: <BarChart3 className="w-4 h-4" /> },
-    { key: 'last-kills', label: 'Últimas Muertes', icon: <Skull className="w-4 h-4" /> },
-    { key: 'news-archive', label: 'Noticias', icon: <Newspaper className="w-4 h-4" /> },
-  ]
-
   return (
-    <div className="min-h-screen flex flex-col">
-      {/* ===== HEADER ===== */}
-      <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <button className="lg:hidden" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+    <TibiaLayout
+      activeTab={activeTab}
+      onNavigate={(tab) => setActiveTab(tab as PageTab)}
+      isLoggedIn={!!account}
+      accountName={account?.name}
+      onLogin={() => setActiveTab('login')}
+      onRegister={() => setActiveTab('register')}
+      onAccount={() => setActiveTab('account')}
+      onLogout={handleLogout}
+      onlineCount={onlineCount}
+    >
+
+        {/* Message banner */}
+        {message && (
+          <div
+            className={`mb-4 px-4 py-2.5 rounded-md text-sm font-medium ${
+              message.type === 'success'
+                ? 'bg-green-900/50 text-green-300 border border-green-500/20'
+                : 'bg-red-900/50 text-red-300 border border-red-500/20'
+            }`}
+          >
+            {message.text}
+            <button className="ml-4 underline opacity-70 hover:opacity-100" onClick={() => setMessage(null)}>
+              Dismiss
             </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => setActiveTab('home')}>
-              <Swords className="w-8 h-8 text-primary" />
-              <span className="text-xl font-bold gold-shimmer">JO Server OT</span>
-            </div>
-          </div>
-
-          {/* Desktop nav */}
-          <nav className="hidden lg:flex items-center gap-1">
-            {mainNav.map(item => (
-              <Button key={item.key} variant={activeTab === item.key ? 'secondary' : 'ghost'} size="sm"
-                onClick={() => setActiveTab(item.key)} className="gap-2 text-sm">
-                {item.icon} {item.label}
-              </Button>
-            ))}
-          </nav>
-
-          {/* Auth buttons */}
-          <div className="flex items-center gap-2">
-            {account ? (
-              <div className="flex items-center gap-2">
-                <Badge variant="outline" className="text-primary border-primary/30">
-                  <User className="w-3 h-3 mr-1" /> {account.name}
-                </Badge>
-                <Button variant="ghost" size="sm" onClick={() => setActiveTab('account')}>
-                  <User className="w-4 h-4" />
-                </Button>
-                <Button variant="ghost" size="sm" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4" />
-                </Button>
-              </div>
-            ) : (
-              <>
-                <Button variant="ghost" size="sm" onClick={() => setActiveTab('login')} className="gap-1">
-                  <LogIn className="w-4 h-4" /> <span className="hidden sm:inline">Login</span>
-                </Button>
-                <Button size="sm" onClick={() => setActiveTab('register')} className="gap-1 bg-primary text-primary-foreground">
-                  <UserPlus className="w-4 h-4" /> <span className="hidden sm:inline">Registro</span>
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="lg:hidden border-t border-border bg-card">
-            <div className="p-2 grid grid-cols-3 gap-1">
-              {mainNav.map(item => (
-                <Button key={item.key} variant={activeTab === item.key ? 'secondary' : 'ghost'} size="sm"
-                  onClick={() => { setActiveTab(item.key); setMobileMenuOpen(false) }} className="justify-start gap-2">
-                  {item.icon} {item.label}
-                </Button>
-              ))}
-            </div>
           </div>
         )}
-      </header>
-
-      {/* Message banner */}
-      {message && (
-        <div className={`px-4 py-2 text-center text-sm font-medium ${message.type === 'success' ? 'bg-green-900/50 text-green-300' : 'bg-red-900/50 text-red-300'}`}>
-          {message.text}
-          <button className="ml-4 underline" onClick={() => setMessage(null)}>X</button>
-        </div>
-      )}
-
-      {/* ===== MAIN CONTENT ===== */}
-      <main className="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
 
         {/* ===== HOME TAB ===== */}
         {activeTab === 'home' && (
@@ -2895,45 +2827,6 @@ export default function HomePage() {
           </div>
         )}
 
-      </main>
-
-      {/* ===== FOOTER ===== */}
-      <footer className="border-t border-border bg-card/50 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Swords className="w-5 h-5 text-primary" />
-                <span className="font-bold">JO Server OT</span>
-              </div>
-              <p className="text-sm text-muted-foreground">Servidor Open Tibia con la mejor experiencia de juego.</p>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Enlaces</h4>
-              <div className="grid grid-cols-2 gap-1">
-                {mainNav.slice(0, 6).map(item => (
-                  <button key={item.key} onClick={() => setActiveTab(item.key)} className="text-sm text-muted-foreground hover:text-primary transition-colors text-left">
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <h4 className="font-medium mb-2">Comunidad</h4>
-              <div className="space-y-1">
-                <button onClick={() => setActiveTab('forum')} className="text-sm text-muted-foreground hover:text-primary transition-colors block">Foro</button>
-                <button onClick={() => setActiveTab('guilds')} className="text-sm text-muted-foreground hover:text-primary transition-colors block">Guilds</button>
-                <button onClick={() => setActiveTab('rules')} className="text-sm text-muted-foreground hover:text-primary transition-colors block">Reglas</button>
-                <button onClick={() => setActiveTab('faq')} className="text-sm text-muted-foreground hover:text-primary transition-colors block">FAQ</button>
-              </div>
-            </div>
-          </div>
-          <Separator className="my-4" />
-          <p className="text-xs text-muted-foreground text-center">
-            JO Server OT &copy; {new Date().getFullYear()} — Hecho con Next.js, React & Tailwind CSS
-          </p>
-        </div>
-      </footer>
-    </div>
+    </TibiaLayout>
   )
 }
