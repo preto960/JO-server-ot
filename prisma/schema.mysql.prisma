@@ -149,8 +149,7 @@ model GuildRank {
 }
 
 model GuildMember {
-  id        Int    @id @default(autoincrement()) @map("id")
-  player_id Int @unique @map("player_id")
+  player_id Int @id @map("player_id")
   guild_id  Int @map("guild_id")
   rank_id   Int @map("rank_id")
   nick      String @default("") @db.VarChar(30) @map("nick")

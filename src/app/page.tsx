@@ -861,6 +861,7 @@ export default function HomePage() {
       onNavigate={(tab) => setActiveTab(tab as PageTab)}
       isLoggedIn={!!account}
       accountName={account?.name}
+      accountType={account?.type}
       onLogin={() => setActiveTab('login')}
       onRegister={() => setActiveTab('register')}
       onAccount={() => setActiveTab('account')}

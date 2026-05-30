@@ -10,7 +10,7 @@ import {
   LogIn, UserPlus, LogOut, User, BookOpen, Scroll, Terminal,
   HelpCircle, Shield, Newspaper, RefreshCw, Image, Star,
   BarChart3, Bug, MessageSquare, ChevronDown, Menu, X,
-  Server,
+  Server, Settings, LayoutDashboard,
 } from 'lucide-react'
 
 // ====== TYPES ======
@@ -35,6 +35,7 @@ export interface TibiaLayoutProps {
   onNavigate: (tab: string) => void
   isLoggedIn: boolean
   accountName?: string
+  accountType?: number
   onLogin: () => void
   onRegister: () => void
   onAccount: () => void
@@ -44,8 +45,8 @@ export interface TibiaLayoutProps {
 }
 
 // ====== MENU CATEGORIES ======
-function buildMenuCategories(): NavCategory[] {
-  return [
+function buildMenuCategories(isAdmin: boolean): NavCategory[] {
+  const categories: NavCategory[] = [
     {
       id: 'account',
       label: 'Account',
@@ -102,6 +103,21 @@ function buildMenuCategories(): NavCategory[] {
       ],
     },
   ]
+
+  // Add Admin Panel category for admins (type >= 4)
+  if (isAdmin) {
+    categories.push({
+      id: 'admin',
+      label: 'Admin Panel',
+      icon: <Settings className="w-4 h-4" />,
+      defaultOpen: true,
+      items: [
+        { key: 'admin', label: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" />, auth: 'logged-in' },
+      ],
+    })
+  }
+
+  return categories
 }
 
 // ====== SIDEBAR CONTENT ======
@@ -202,6 +218,7 @@ export function TibiaLayout({
   onNavigate,
   isLoggedIn,
   accountName,
+  accountType = 1,
   onLogin,
   onRegister,
   onAccount,
@@ -212,7 +229,8 @@ export function TibiaLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [collapsedCategories, setCollapsedCategories] = useState<Set<string>>(new Set())
 
-  const menuCategories = buildMenuCategories()
+  const isAdmin = accountType >= 4
+  const menuCategories = buildMenuCategories(isAdmin)
 
   // Lock body scroll when mobile menu is open
   useEffect(() => {
